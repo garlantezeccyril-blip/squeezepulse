@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#020810">
+<title>SqueezePulse V2.4</title>
+<!-- Polices : chargement non-bloquant -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap"
+      rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+<style>
+
+/* ═══════════════════════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:      #020810;
+  --panel:   #080f20;
+  --panel2:  #0b1830;
+  --border:  #0d2540;
+  --bhi:     #163354;
+  --cyan:    #00d4ff;
+  --green:   #00ff88;
+  --red:     #ff3366;
+  --yellow:  #ffcc00;
+  --orange:  #ff8800;
+  --purple:  #aa44ff;
+  --text:    #b8cce0;
+  --dim:     #5a7a99;   /* was #2e4a66 — contraste ~4.6:1 */
+  --bright:  #e0f0ff;
+  --mono:    'Share Tech Mono', monospace;
+  --display: 'Orbitron', sans-serif;
+  --body:    'Rajdhani', sans-serif;
+  --r:       6px;
+  --safe-b:  env(safe-area-inset-bottom, 0px);
+  --safe-t:  env(safe-area-inset-top, 0px);
+  color-scheme: dark;
+}
+
+/* ── Tokens mode clair ───────────────────────────────────────── */
+/* Déclenché automatiquement par le système (Android/iOS/Desktop)            */
+/* OU forcé manuellement via .light-mode sur <html>                          */
+
+@media (prefers-color-scheme: light) {
+  :root:not(.dark-mode) {
+    --bg:      #f0f3f8;
+    --panel:   #ffffff;
+    --panel2:  #e8edf5;
+    --border:  #c8d5e8;
+    --bhi:     #b0c4de;
+    --text:    #1a2a3e;
+    --dim:     #5a7090;
+    --bright:  #0a1628;
+    color-scheme: light;
+  }
+}
+
+/* Force mode clair (toggle manuel sur système sombre) */
+html.light-mode {
+  --bg:      #f0f3f8;
+  --panel:   #ffffff;
+  --panel2:  #e8edf5;
+  --border:  #c8d5e8;
+  --bhi:     #b0c4de;
+  --text:    #1a2a3e;
+  --dim:     #5a7090;
+  --bright:  #0a1628;
+  color-scheme: light;
+}
+
+/* Styles communs mode clair (media + classe) */
+@media (prefers-color-scheme: light) {
+  :root:not(.dark-mode) body {
+    background-image:
+      linear-gradient(rgba(0,100,180,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,100,180,.03) 1px, transparent 1px);
+  }
+  :root:not(.dark-mode) .app-header  { background: rgba(240,243,248,.95); }
+  :root:not(.dark-mode) .sig-card    { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  :root:not(.dark-mode) .log-sheet   { background: rgba(240,243,248,.97); }
+}
+
+html.light-mode body {
+  background-image:
+    linear-gradient(rgba(0,100,180,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,100,180,.03) 1px, transparent 1px);
+}
+html.light-mode .app-header  { background: rgba(240,243,248,.95); }
+html.light-mode .sig-card    { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+html.light-mode .log-sheet   { background: rgba(240,243,248,.97); }
+
+/* Bouton theme toggle */
+.btn-theme {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--dim);
+  font-size: 16px;
+  width: 36px; height: 36px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .2s, color .2s;
+}
+.btn-theme:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html { scroll-behavior: smooth; overscroll-behavior: none; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  background-image:
+    linear-gradient(rgba(0,212,255,.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,.015) 1px, transparent 1px);
+  background-size: 32px 32px;
+  padding-top: var(--safe-t);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STICKY HEADER
+═══════════════════════════════════════════════════════════════ */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(2,8,16,.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 180px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--cyan), transparent);
+}
+
+.logo { display: flex; align-items: center; gap: 8px; }
+
+.logo-icon {
+  font-size: 20px;
+  animation: pulse-icon 3s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+  0%,100% { filter: drop-shadow(0 0 4px rgba(0,212,255,.5)); }
+  50%      { filter: drop-shadow(0 0 12px rgba(0,212,255,.9)); }
+}
+
+.logo-name {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--bright);
+  text-shadow: 0 0 16px rgba(0,212,255,.35);
+  line-height: 1;
+}
+
+.logo-ver {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--cyan);
+  opacity: .6;
+  letter-spacing: 1px;
+  margin-top: 3px;
+}
+
+/* TF group */
+.tf-group {
+  display: flex;
+  gap: 3px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 3px;
+}
+
+.tf-btn {
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  font-family: var(--display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 7px 12px;
+  min-width: 44px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all .2s;
+  touch-action: manipulation;
+}
+
+.tf-btn.active {
+  background: rgba(0,212,255,.18);
+  color: var(--cyan);
+}
+
+/* Log toggle button */
+.btn-log-toggle {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--dim);
+  font-size: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  transition: all .2s;
+  position: relative;
+}
+
+.btn-log-toggle.has-warn { border-color: rgba(255,204,0,.4); color: var(--yellow); }
+.btn-log-toggle.has-err  { border-color: rgba(255,51,102,.4); color: var(--red); }
+.log-notif {
+  position: absolute;
+  top: -4px; right: -4px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  display: none;
+}
+.btn-log-toggle.has-err .log-notif { display: block; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BTC + STATS STRIP
+═══════════════════════════════════════════════════════════════ */
+.info-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.strip-cell {
+  background: var(--panel);
+  padding: 7px 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.strip-lbl {
+  font-family: var(--display);
+  font-size: 6px;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+}
+
+.strip-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--bright);
+  line-height: 1;
+}
+
+.strip-val.cyan   { color: var(--cyan); }
+.strip-val.green  { color: var(--green); }
+.strip-val.orange { color: var(--orange); }
+.strip-val.yellow { color: var(--yellow); }
+.strip-val.red    { color: var(--red); }
+
+/* BTC cell special */
+.strip-cell.btc-cell { cursor: default; }
+.strip-cell.btc-cell .strip-val { font-size: 11px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════════════════════════ */
+.progress-wrap {
+  height: 2px;
+  background: transparent;
+  overflow: hidden;
+  transition: opacity .3s;
+  opacity: 0;
+}
+
+.progress-wrap.visible { opacity: 1; }
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  transition: width .5s ease;
+  box-shadow: 0 0 6px rgba(0,212,255,.6);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONFIG PANEL (collapsible)
+═══════════════════════════════════════════════════════════════ */
+.config-toggle {
+  width: 100%;
+  background: var(--panel2);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--dim);
+  font-family: var(--display);
+  font-size: 8px;
+  letter-spacing: 2px;
+  padding: 9px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  touch-action: manipulation;
+  transition: color .2s;
+}
+
+.config-toggle:active { color: var(--bright); }
+
+.config-arrow {
+  transition: transform .25s;
+  font-size: 10px;
+}
+
+.config-toggle.open .config-arrow { transform: rotate(180deg); }
+
+.config-panel {
+  display: none;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.config-panel.open { display: block; }
+
+.cfg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.cfg-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cfg-lbl {
+  font-family: var(--display);
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+}
+
+.cfg-num, .cfg-score-min {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 16px; /* 16px = no zoom on iOS/Android */
+  padding: 8px 6px;
+  border-radius: var(--r);
+  text-align: center;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+}
+
+.cfg-score-min { color: var(--yellow); }
+
+.cfg-num:focus    { border-color: var(--cyan);   box-shadow: 0 0 8px rgba(0,212,255,.2); }
+.cfg-score-min:focus { border-color: var(--yellow); box-shadow: 0 0 8px rgba(255,204,0,.2); }
+
+/* ═══════════════════════════════════════════════════════════════
+   FILTER TABS (scrollable horizontal)
+═══════════════════════════════════════════════════════════════ */
+.filter-tabs {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: var(--panel2);
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-tabs::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--dim);
+  font-family: var(--display);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 12px 18px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+  touch-action: manipulation;
+  min-height: 44px;
+}
+
+.tab-btn.active            { color: var(--cyan);   border-bottom-color: var(--cyan);   background: rgba(0,212,255,.05); }
+.tab-btn.fire.active       { color: var(--orange); border-bottom-color: var(--orange); background: rgba(255,136,0,.05); }
+.tab-btn.spring.active     { color: var(--green);  border-bottom-color: var(--green);  background: rgba(0,255,136,.05); }
+.tab-btn.sniper.active     { color: var(--orange); border-bottom-color: var(--orange); background: rgba(255,136,0,.07); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESULTS HEADER
+═══════════════════════════════════════════════════════════════ */
+.results-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.panel-title {
+  font-family: var(--display);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--bright);
+}
+
+.count-badge {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  transition: all .3s;
+}
+
+.count-badge.has-results {
+  border-color: rgba(0,212,255,.3);
+  color: var(--cyan);
+  background: rgba(0,212,255,.07);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESULTS LIST (cards — pas de table sur mobile)
+═══════════════════════════════════════════════════════════════ */
+#tableWrap {
+  padding: 8px;
+  padding-bottom: calc(80px + var(--safe-b)); /* espace pour le FAB */
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 12px;
+}
+
+.empty-icon { font-size: 40px; opacity: .3; }
+.empty-lbl  { font-family: var(--display); font-size: 9px; letter-spacing: 2px; color: var(--dim); }
+
+/* Signal card */
+.sig-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 6px;
+  overflow: hidden;
+  transition: border-color .15s;
+  animation: card-in .25s ease both;
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sig-card:active { background: rgba(0,212,255,.03); }
+
+/* Card accent bar (left) */
+.sig-card.SQUEEZE  { border-left: 3px solid var(--purple); }
+.sig-card.BREAKOUT { border-left: 3px solid var(--cyan);   }
+.sig-card.FIRE     { border-left: 3px solid var(--orange); }
+.sig-card.NEUTRAL  { border-left: 3px solid var(--dim);    }
+.sig-card.SPRING   { border-left: 3px solid var(--green);  }
+
+/* Card top row */
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 6px;
+}
+
+.card-pair {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--bright);
+  letter-spacing: 1px;
+}
+
+.card-price {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* Card badges row */
+.card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 8px;
+  flex-wrap: wrap;
+}
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--display);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid;
+}
+
+.type-badge.SQUEEZE  { color: var(--purple); border-color: rgba(170,68,255,.4); background: rgba(170,68,255,.1); }
+.type-badge.BREAKOUT { color: var(--cyan);   border-color: rgba(0,212,255,.4);  background: rgba(0,212,255,.1); }
+.type-badge.FIRE     { color: var(--orange); border-color: rgba(255,136,0,.4);  background: rgba(255,136,0,.1); }
+.type-badge.NEUTRAL  { color: var(--dim);    border-color: rgba(46,74,102,.5);  background: transparent; }
+.type-badge.SPRING   { color: var(--green);  border-color: rgba(0,255,136,.4);  background: rgba(0,255,136,.1); }
+.type-badge.SNIPER   { color: var(--orange); border-color: rgba(255,136,0,.5);  background: rgba(255,136,0,.12); letter-spacing: 0.5px; }
+
+.sqz-dur { font-family: var(--mono); font-size: 9px; color: var(--dim); }
+
+.btc-tag {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* Card metrics row */
+.card-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--border);
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 7px 6px;
+  border-right: 1px solid var(--border);
+  gap: 2px;
+}
+
+.metric:last-child { border-right: none; }
+
+.metric-lbl {
+  font-family: var(--display);
+  font-size: 6px;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+}
+
+.metric-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.metric-val.adx   { color: var(--cyan); }
+.metric-val.rvol  { color: var(--yellow); }
+.metric-val.score-hi  { color: var(--green);  text-shadow: 0 0 6px rgba(0,255,136,.4); }
+.metric-val.score-mid { color: var(--yellow); }
+.metric-val.score-lo  { color: var(--purple); }
+
+/* Score bar inside metric */
+.score-bar-bg {
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* Card detail (expandable) — tap to open */
+.card-detail {
+  display: none;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  background: rgba(0,0,0,.3);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.card-detail.open { display: block; }
+
+.detail-title {
+  font-family: var(--display);
+  font-size: 7px;
+  letter-spacing: 2px;
+  color: var(--dim);
+  margin-bottom: 8px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(13,37,64,.6);
+}
+
+.detail-row:last-child { border-bottom: none; }
+.detail-row .lbl { color: var(--text); }
+.detail-row .pos { color: var(--green); }
+.detail-row .neg { color: var(--red); }
+.detail-row .neu { color: var(--dim); }
+
+/* Tap hint */
+.card-tap-hint {
+  text-align: center;
+  padding: 5px;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--dim);
+  opacity: .5;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FAB — Floating Action Button SCANNER
+═══════════════════════════════════════════════════════════════ */
+.fab-wrap {
+  position: fixed;
+  bottom: calc(16px + var(--safe-b));
+  right: 16px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.btn-scan {
+  background: linear-gradient(135deg, #0066aa, #003366);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 0 20px;
+  height: 52px;
+  min-width: 140px;
+  cursor: pointer;
+  border-radius: 26px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.6), 0 0 20px rgba(0,212,255,.2);
+  touch-action: manipulation;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-shadow: 0 0 8px rgba(0,212,255,.5);
+}
+
+.btn-scan:active { transform: scale(.96); }
+.btn-scan:disabled { opacity: .5; }
+
+.btn-scan.scanning {
+  border-color: var(--yellow);
+  color: var(--yellow);
+  text-shadow: 0 0 8px rgba(255,204,0,.5);
+  background: linear-gradient(135deg, #332200, #1a1000);
+  animation: fab-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes fab-pulse {
+  0%,100% { box-shadow: 0 4px 20px rgba(0,0,0,.6), 0 0 12px rgba(255,204,0,.2); }
+  50%      { box-shadow: 0 4px 20px rgba(0,0,0,.6), 0 0 28px rgba(255,204,0,.5); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOG BOTTOM SHEET
+═══════════════════════════════════════════════════════════════ */
+.log-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 300;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+
+.log-sheet-backdrop.open { opacity: 1; pointer-events: all; }
+
+.log-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 301;
+  background: var(--panel);
+  border-top: 1px solid var(--bhi);
+  border-radius: 14px 14px 0 0;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  padding-bottom: var(--safe-b);
+  max-height: 70dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.log-sheet.open { transform: translateY(0); }
+
+.log-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--bhi);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+.log-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.log-sheet-title {
+  font-family: var(--display);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--dim);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.log-sheet-title::before {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.btn-log-close {
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  touch-action: manipulation;
+}
+
+.log-box {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.log-e {
+  display: flex;
+  gap: 8px;
+  padding: 4px 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.5;
+  border-left: 2px solid transparent;
+}
+
+.log-t { color: var(--dim); flex-shrink: 0; }
+.log-m       { color: var(--text); word-break: break-all; }
+.log-m.ok    { color: var(--green); }
+.log-m.err   { color: var(--red); }
+.log-m.warn  { color: var(--yellow); }
+.log-m.sys   { color: var(--cyan); opacity: .75; }
+
+.log-e:has(.ok)   { border-color: rgba(0,255,136,.25); }
+.log-e:has(.err)  { border-color: rgba(255,51,102,.25); background: rgba(255,51,102,.03); }
+.log-e:has(.warn) { border-color: rgba(255,204,0,.25); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SCANLINES (très léger sur mobile)
+═══════════════════════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,.03) 3px,
+    rgba(0,0,0,.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SNIPER PHASE 2 — Live Monitor M1
+═══════════════════════════════════════════════════════════════ */
+#sniper-panel { display: none; padding: 10px 8px; padding-bottom: calc(80px + var(--safe-b)); }
+
+.sniper-toolbar {
+  display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;
+}
+
+.sniper-input {
+  flex: 1; min-width: 100px;
+  background: var(--panel2); border: 1px solid var(--border);
+  color: var(--orange); font-family: var(--mono); font-size: 14px;
+  padding: 9px 10px; border-radius: var(--r); outline: none;
+}
+.sniper-input:focus { border-color: var(--orange); box-shadow: 0 0 8px rgba(255,136,0,.2); }
+.sniper-input::placeholder { color: var(--dim); font-size: 12px; }
+
+.btn-sniper-add {
+  background: rgba(255,136,0,.15); border: 1px solid rgba(255,136,0,.4);
+  color: var(--orange); font-family: var(--display); font-size: 9px;
+  font-weight: 700; letter-spacing: 1px; padding: 9px 14px;
+  border-radius: var(--r); cursor: pointer; white-space: nowrap;
+  touch-action: manipulation; transition: all .2s;
+}
+.btn-sniper-add:active { background: rgba(255,136,0,.3); }
+
+.btn-sniper-startstop {
+  background: rgba(0,255,136,.12); border: 1px solid rgba(0,255,136,.35);
+  color: var(--green); font-family: var(--display); font-size: 9px;
+  font-weight: 700; letter-spacing: 1px; padding: 9px 16px;
+  border-radius: var(--r); cursor: pointer; white-space: nowrap;
+  touch-action: manipulation; transition: all .2s;
+}
+.btn-sniper-startstop.running {
+  background: rgba(255,51,102,.12); border-color: rgba(255,51,102,.35); color: var(--red);
+}
+
+.btn-sniper-voice {
+  background: var(--panel2); border: 1px solid var(--border);
+  color: var(--dim); font-size: 16px; width: 40px; height: 40px;
+  border-radius: var(--r); cursor: pointer; display: flex;
+  align-items: center; justify-content: center; touch-action: manipulation;
+  transition: all .2s; flex-shrink: 0;
+}
+.btn-sniper-voice.active { border-color: rgba(0,212,255,.4); color: var(--cyan); }
+
+.sniper-count {
+  font-family: var(--mono); font-size: 10px; color: var(--dim); white-space: nowrap;
+}
+
+/* Grid des cards */
+.sniper-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 360px) { .sniper-grid { grid-template-columns: 1fr; } }
+
+.sniper-empty {
+  grid-column: 1 / -1; text-align: center;
+  padding: 40px 20px; color: var(--dim);
+  font-family: var(--display); font-size: 8px; letter-spacing: 1.5px;
+}
+
+/* Sniper card */
+.sniper-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 10px;
+  border-left: 3px solid var(--dim);
+  transition: border-color .3s;
+  position: relative; overflow: hidden;
+}
+.sniper-card.WARM  { border-left-color: var(--yellow); }
+.sniper-card.ALERT { border-left-color: var(--orange); }
+.sniper-card.FIRE  { border-left-color: var(--red); }
+
+@keyframes sniper-flash {
+  0%,100% { background: var(--panel); }
+  25%,75% { background: rgba(255,136,0,.18); }
+  50%     { background: rgba(255,51,102,.22); }
+}
+.sniper-card.flash { animation: sniper-flash .5s ease 4; }
+
+.snp-head {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+}
+.snp-pair {
+  font-family: var(--display); font-size: 14px; font-weight: 900;
+  color: var(--bright); flex: 1; letter-spacing: 1px;
+}
+.snp-status {
+  font-family: var(--display); font-size: 7px; font-weight: 700;
+  letter-spacing: 1px; padding: 2px 6px; border-radius: 3px;
+}
+.snp-status.WAITING { color: var(--dim);    background: rgba(46,74,102,.3); }
+.snp-status.WARM    { color: var(--yellow); background: rgba(255,204,0,.12); }
+.snp-status.ALERT   { color: var(--orange); background: rgba(255,136,0,.15); }
+.snp-status.FIRE    { color: var(--red);    background: rgba(255,51,102,.18);
+                       animation: blink 1s infinite; }
+.snp-remove {
+  background: transparent; border: none; color: var(--dim);
+  font-size: 12px; cursor: pointer; padding: 2px 4px; touch-action: manipulation;
+}
+.snp-price {
+  font-family: var(--mono); font-size: 13px; color: var(--cyan);
+  margin-bottom: 8px;
+}
+.snp-signals {
+  display: flex; flex-direction: row; gap: 6px;
+  flex-wrap: nowrap; align-items: center;
+  margin-bottom: 6px; overflow: hidden;
+}
+.snp-sig {
+  font-family: var(--mono); font-size: 10px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.snp-sig.on  { color: var(--green); }
+.snp-sig.off { color: var(--dim); }
+
+/* Légende indicateurs sous le compteur */
+.snp-legend {
+  display: flex; flex-direction: row; gap: 6px; flex-wrap: nowrap;
+  font-family: var(--mono); font-size: 9px; color: var(--dim);
+  padding: 4px 0 6px; letter-spacing: .3px; overflow: hidden;
+}
+
+.snp-score-bar {
+  height: 3px; background: var(--border); border-radius: 2px;
+  overflow: hidden; margin-bottom: 4px;
+}
+.snp-score-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--yellow), var(--orange), var(--red));
+  transition: width .5s ease;
+}
+.snp-score-label {
+  font-family: var(--mono); font-size: 9px; color: var(--dim);
+}
+.snp-time {
+  font-family: var(--mono); font-size: 9px; color: var(--orange);
+  margin-top: 3px;
+}
+
+/* Bouton ➕ sur les cards Phase 1 */
+.btn-to-sniper {
+  background: rgba(255,136,0,.1); border: 1px solid rgba(255,136,0,.3);
+  color: var(--orange); font-size: 11px; padding: 3px 8px;
+  border-radius: 4px; cursor: pointer; touch-action: manipulation;
+  font-family: var(--mono); transition: all .2s; margin-left: 4px;
+}
+.btn-to-sniper:active { background: rgba(255,136,0,.25); }
+
+/* ═══════════════════════════════════════════════════════════════
+   BACKTEST PHASE 2
+═══════════════════════════════════════════════════════════════ */
+#bt2-panel {
+  display: none; padding: 10px 8px;
+  padding-bottom: calc(80px + var(--safe-b));
+}
+
+.bt2-toolbar {
+  display: flex; gap: 8px; margin-bottom: 10px;
+  align-items: center; flex-wrap: wrap;
+}
+
+.bt2-input {
+  flex: 1; min-width: 90px;
+  background: var(--panel2); border: 1px solid var(--border);
+  color: var(--purple); font-family: var(--mono); font-size: 14px;
+  padding: 9px 10px; border-radius: var(--r); outline: none;
+}
+.bt2-input:focus { border-color: var(--purple); box-shadow: 0 0 8px rgba(170,68,255,.2); }
+.bt2-input::placeholder { color: var(--dim); font-size: 12px; }
+
+.btn-bt2-run {
+  background: rgba(170,68,255,.15); border: 1px solid rgba(170,68,255,.4);
+  color: var(--purple); font-family: var(--display); font-size: 9px;
+  font-weight: 700; letter-spacing: 1px; padding: 9px 16px;
+  border-radius: var(--r); cursor: pointer; white-space: nowrap;
+  touch-action: manipulation; transition: all .2s;
+}
+.btn-bt2-run:active { background: rgba(170,68,255,.3); }
+
+.bt2-cfg-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px; margin-bottom: 10px;
+}
+
+.bt2-cfg-item {
+  display: flex; flex-direction: column; gap: 3px;
+}
+
+.bt2-cfg-lbl {
+  font-family: var(--display); font-size: 6px;
+  letter-spacing: 1.5px; color: var(--dim);
+}
+
+.bt2-cfg-num {
+  background: var(--panel2); border: 1px solid var(--border);
+  color: var(--cyan); font-family: var(--mono); font-size: 14px;
+  padding: 7px 6px; border-radius: var(--r);
+  text-align: center; outline: none; width: 100%;
+  -webkit-appearance: none;
+}
+.bt2-cfg-num:focus { border-color: var(--cyan); }
+
+#bt2-status {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--dim); margin-bottom: 8px; min-height: 14px;
+}
+
+/* Stat grid */
+.bt2-stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 6px; margin-bottom: 14px;
+}
+
+.bt2-stat {
+  background: var(--panel2); border-radius: var(--r);
+  padding: 8px 6px; display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+}
+
+.bt2-stat-lbl {
+  font-family: var(--display); font-size: 6px;
+  letter-spacing: 1px; color: var(--dim);
+}
+
+.bt2-stat-val {
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+  color: var(--text);
+}
+.bt2-stat-val.pos { color: var(--green); }
+.bt2-stat-val.neg { color: var(--red); }
+.bt2-stat-val.neu { color: var(--yellow); }
+
+/* Equity curve */
+.bt2-section-title {
+  font-family: var(--display); font-size: 7px;
+  letter-spacing: 2px; color: var(--dim);
+  margin: 12px 0 6px;
+}
+
+.bt2-chart-wrap {
+  width: 100%; background: var(--panel2);
+  border: 1px solid var(--border); border-radius: var(--r);
+  overflow: hidden; margin-bottom: 6px;
+}
+
+.bt2-chart-wrap canvas { display: block; width: 100% !important; }
+
+.bt2-cfg-recap {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--dim); margin-bottom: 12px;
+  padding: 5px 8px; background: var(--panel2);
+  border-radius: var(--r); border: 1px solid var(--border);
+}
+
+/* Trade list */
+.bt2-trade-list {
+  display: flex; flex-direction: column; gap: 5px;
+}
+
+.bt2-trade-row {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 8px 10px;
+  border-left: 3px solid var(--dim);
+}
+.bt2-trade-row:has(.tp)   { border-left-color: var(--green); }
+.bt2-trade-row:has(.sl)   { border-left-color: var(--red); }
+.bt2-trade-row:has(.open) { border-left-color: var(--yellow); }
+
+.bt2-trade-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 4px; flex-wrap: wrap;
+}
+
+.bt2-exit-type {
+  font-family: var(--display); font-size: 8px; font-weight: 700;
+  letter-spacing: 1px; padding: 2px 6px; border-radius: 3px;
+  min-width: 40px; text-align: center;
+}
+.bt2-exit-type.tp   { color: var(--green);  background: rgba(0,255,136,.12); }
+.bt2-exit-type.sl   { color: var(--red);    background: rgba(255,51,102,.12); }
+.bt2-exit-type.open { color: var(--yellow); background: rgba(255,204,0,.12); }
+
+.bt2-trade-date { font-family: var(--mono); font-size: 10px; color: var(--text); flex: 1; }
+.bt2-trade-pnl  { font-family: var(--mono); font-size: 12px; font-weight: 700; }
+.bt2-trade-pnl.pos { color: var(--green); }
+.bt2-trade-pnl.neg { color: var(--red); }
+.bt2-trade-dur  { font-family: var(--mono); font-size: 9px; color: var(--dim); }
+
+.bt2-trade-prices {
+  display: flex; gap: 12px; font-family: var(--mono);
+  font-size: 10px; color: var(--dim); flex-wrap: wrap;
+  align-items: center;
+}
+.bt2-trade-prices b { color: var(--cyan); }
+
+.bt2-sigs { display: flex; align-items: center; gap: 2px; }
+.bt2-sig-dot { font-size: 8px; }
+.bt2-sig-dot.on  { color: var(--green); }
+.bt2-sig-dot.off { color: var(--dim); opacity: .4; }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHTWEIGHT CHARTS — mini-graphiques dans les cards
+═══════════════════════════════════════════════════════════════ */
+.chart-wrap {
+  display: none;
+  width: 100%;
+  border-top: 1px solid var(--border);
+  background: #080f20;
+  overflow: hidden;
+}
+
+.chart-wrap.open {
+  display: block;
+  animation: chart-in .2s ease both;
+}
+
+@keyframes chart-in {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 260px; }
+}
+
+.chart-err {
+  padding: 20px;
+  text-align: center;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  background: #060c18;
+  min-height: 22px;
+}
+
+.chart-legend .cl-time { color: var(--dim); }
+.chart-legend .cl-o    { color: #888; }
+.chart-legend .cl-h    { color: var(--green); }
+.chart-legend .cl-l    { color: var(--red); }
+.chart-legend .cl-c    { color: var(--cyan); }
+.chart-legend .cl-pnl  { font-weight: 700; margin-left: auto; }
+.chart-legend .cl-pnl.pos { color: var(--green); }
+.chart-legend .cl-pnl.neg { color: var(--red); }
+.chart-legend b { color: var(--bright); }
+
+.btn-chart {
+  background: rgba(0,212,255,.08);
+  border: 1px solid rgba(0,212,255,.2);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.btn-chart:active { background: rgba(0,212,255,.2); }
+
+.snp-origin { font-family: var(--display); font-size: 7px; font-weight: 700; letter-spacing: 1px; }
+.snp-origin.sniper  { color: var(--orange); }
+.snp-origin.squeeze { color: var(--purple); }
+
+</style>
+</head>
+<body>
+
+<!-- ══ STICKY HEADER ════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-name">SQUEEZE PULSE</div>
+      <div class="logo-ver">V2.1 — COINBASE USD</div>
+    </div>
+  </div>
+
+  <div class="tf-group">
+    <button class="tf-btn active" onclick="setTF(this, 3600)">H1</button>
+    <button class="tf-btn" onclick="setTF(this, 21600)">H6</button>
+  </div>
+
+  <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" title="Mode clair/sombre">🌙</button>
+
+  <button class="btn-log-toggle" id="btnLogToggle" onclick="toggleLog()">
+    📋
+    <span class="log-notif" id="logNotif"></span>
+  </button>
+</header>
+
+<!-- ══ INFO STRIP ═══════════════════════════════════════════════ -->
+<div class="info-strip">
+  <div class="strip-cell btc-cell">
+    <span class="strip-lbl">BTC</span>
+    <span class="strip-val" id="stripBTC" style="font-size:10px">—</span>
+  </div>
+  <div class="strip-cell">
+    <span class="strip-lbl">SCANNÉES</span>
+    <span class="strip-val cyan" id="statScanned">—</span>
+  </div>
+  <div class="strip-cell">
+    <span class="strip-lbl">SIGNAUX</span>
+    <span class="strip-val green" id="statSignals">—</span>
+  </div>
+  <div class="strip-cell">
+    <span class="strip-lbl">SPRINGS</span>
+    <span class="strip-val yellow" id="statSprings">—</span>
+  </div>
+  <div class="strip-cell">
+    <span class="strip-lbl">SNIPER</span>
+    <span class="strip-val orange" id="statSniper">—</span>
+  </div>
+</div>
+
+<!-- ══ PROGRESS ═════════════════════════════════════════════════ -->
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-fill" id="progressBar"></div>
+</div>
+
+<!-- ══ CONFIG (collapsible) ═════════════════════════════════════ -->
+<button class="config-toggle" id="cfgToggle" onclick="toggleConfig()">
+  <span>⚙ PARAMÈTRES</span>
+  <span class="config-arrow" id="cfgArrow">▼</span>
+</button>
+
+<div class="config-panel" id="cfgPanel">
+  <div class="cfg-grid">
+    <div class="cfg-item">
+      <span class="cfg-lbl">BB MULT</span>
+      <input class="cfg-num" id="bbMult" type="number" value="2.0" step="0.1" min="0.5" max="4" inputmode="decimal">
+    </div>
+    <div class="cfg-item">
+      <span class="cfg-lbl">KC MULT</span>
+      <input class="cfg-num" id="kcMult" type="number" value="1.5" step="0.1" min="0.5" max="4" inputmode="decimal">
+    </div>
+    <div class="cfg-item">
+      <span class="cfg-lbl">ADX MIN</span>
+      <input class="cfg-num" id="adxMin" type="number" value="20" min="10" max="60" inputmode="numeric">
+    </div>
+    <div class="cfg-item">
+      <span class="cfg-lbl">SQZ MIN</span>
+      <input class="cfg-num" id="sqzMin" type="number" value="4" min="1" max="40" inputmode="numeric">
+    </div>
+    <div class="cfg-item">
+      <span class="cfg-lbl">SCORE MIN</span>
+      <input class="cfg-score-min" id="scoreMin" type="number" value="50" min="0" max="100" inputmode="numeric">
+    </div>
+  </div>
+</div>
+
+<!-- ══ FILTER TABS ══════════════════════════════════════════════ -->
+<div class="filter-tabs">
+  <button class="tab-btn active" id="tab-all"    onclick="filterStrategy('all')">📊 TOUT</button>
+  <button class="tab-btn fire"   id="tab-fire"   onclick="filterStrategy('fire')">🔥 BREAKOUT / FIRE</button>
+  <button class="tab-btn spring" id="tab-spring" onclick="filterStrategy('spring')">🌿 SPRING WYCKOFF</button>
+  <button class="tab-btn sniper" id="tab-sniper" onclick="filterStrategy('sniper')">◎ SNIPER</button>
+  <button class="tab-btn sniper" id="tab-live"   onclick="showSniperPanel()">📡 LIVE M1</button>
+  <button class="tab-btn"        id="tab-bt2"    onclick="showBT2Panel()">🧪 BACKTEST P2</button>
+</div>
+
+<!-- ══ RESULTS HEADER ═══════════════════════════════════════════ -->
+<div class="results-hd">
+  <div class="panel-title" id="panelTitle">RÉSULTATS DU SCAN</div>
+  <div class="count-badge" id="countBadge">0 paires</div>
+</div>
+
+<!-- ══ RESULTS LIST ═════════════════════════════════════════════ -->
+<div id="tableWrap">
+  <div class="empty">
+    <div class="empty-icon">📡</div>
+    <div class="empty-lbl">LANCE UN SCAN POUR COMMENCER</div>
+  </div>
+</div>
+
+<!-- ══ SNIPER LIVE M1 PANEL ══════════════════════════════════════ -->
+<div id="sniper-panel">
+  <div class="sniper-toolbar">
+    <input class="sniper-input" id="sniper-input" type="text"
+           placeholder="Ex: CTSI ou MINA-USD"
+           onkeydown="if(event.key==='Enter') sniperAdd()">
+    <button class="btn-sniper-add" onclick="sniperAdd()">➕ AJOUTER</button>
+    <button class="btn-sniper-startstop" id="sniper-startstop" onclick="sniperToggle()">▶ DÉMARRER</button>
+    <button class="btn-sniper-voice active" id="sniper-voice-btn" onclick="sniperToggleVoice()" title="Alertes vocales">🔊</button>
+    <button class="btn-sniper-add" onclick="Sniper.clearAll(); updateSniperCount()" style="color:var(--red);border-color:rgba(255,51,102,.3);background:rgba(255,51,102,.08)">🗑 VIDER</button>
+    <button class="btn-snp-cfg" id="btn-snp-cfg" onclick="toggleSnpCfg()" title="Réglages signaux">⚙️</button>
+  </div>
+  <!-- Config M1 -->
+  <div class="snp-cfg-panel" id="snp-cfg-panel">
+    <div class="snp-cfg-row">
+      <span class="snp-cfg-lbl">RSI min</span>
+      <input type="range" id="snpRsiMin" min="40" max="70" step="1" value="55"
+             oninput="document.getElementById('snpRsiMinVal').textContent=this.value; Sniper.saveCfg()">
+      <span class="snp-cfg-val" id="snpRsiMinVal">55</span>
+    </div>
+    <div class="snp-cfg-row">
+      <span class="snp-cfg-lbl">VOL min (x MA)</span>
+      <input type="range" id="snpVolMin" min="1.0" max="3.0" step="0.1" value="1.2"
+             oninput="document.getElementById('snpVolMinVal').textContent=parseFloat(this.value).toFixed(1)+'x'; Sniper.saveCfg()">
+      <span class="snp-cfg-val" id="snpVolMinVal">1.2x</span>
+    </div>
+    <div class="snp-cfg-row">
+      <span class="snp-cfg-lbl">OBV bougies</span>
+      <input type="range" id="snpObvBars" min="2" max="6" step="1" value="4"
+             oninput="document.getElementById('snpObvBarsVal').textContent=this.value; Sniper.saveCfg()">
+      <span class="snp-cfg-val" id="snpObvBarsVal">4</span>
+    </div>
+  </div>
+  <div class="sniper-count" id="sniper-count">0 / 10 paires</div>
+  <div class="snp-legend"><span>○ BB</span><span>○ RSI</span><span>○ MACD</span><span>○ VOL</span><span>○ EMA 9&gt;20</span><span>○ OBV ↑</span></div>
+  <div class="sniper-grid" id="sniper-grid">
+    <div class="sniper-empty">Ajoutez des paires depuis la Phase 1 (bouton ➕ sur chaque card) ou tapez une paire ci-dessus</div>
+  </div>
+</div>
+
+<!-- ══ BACKTEST PHASE 2 PANEL ════════════════════════════════════ -->
+<div id="bt2-panel">
+
+  <div class="bt2-toolbar">
+    <input class="bt2-input" id="bt2-pair" type="text"
+           placeholder="Paire ex: CTSI ou MINA-USD"
+           onkeydown="if(event.key==='Enter') bt2Run()">
+    <button class="btn-bt2-run" onclick="bt2Run()">▶ ANALYSER</button>
+  </div>
+
+  <div class="bt2-cfg-row">
+    <div class="bt2-cfg-item">
+      <span class="bt2-cfg-lbl">TP %</span>
+      <input class="bt2-cfg-num" id="bt2-tp" type="number" value="3" step="0.5" min="0.5" max="20" inputmode="decimal">
+    </div>
+    <div class="bt2-cfg-item">
+      <span class="bt2-cfg-lbl">SL %</span>
+      <input class="bt2-cfg-num" id="bt2-sl" type="number" value="1.5" step="0.5" min="0.5" max="10" inputmode="decimal">
+    </div>
+    <div class="bt2-cfg-item">
+      <span class="bt2-cfg-lbl">MIN SIGNAUX</span>
+      <input class="bt2-cfg-num" id="bt2-minsig" type="number" value="4" min="2" max="6" inputmode="numeric">
+    </div>
+    <div class="bt2-cfg-item">
+      <span class="bt2-cfg-lbl">CAPITAL $</span>
+      <input class="bt2-cfg-num" id="bt2-capital" type="number" value="1000" step="100" min="100" inputmode="numeric">
+    </div>
+  </div>
+
+  <div id="bt2-status"></div>
+  <div id="bt2-results"></div>
+
+</div>
+<div class="fab-wrap">
+  <button class="btn-scan" id="btnScan" onclick="startScan()">
+    <span id="btnScanIcon">▶</span>
+    <span id="btnScanText">SCANNER</span>
+  </button>
+</div>
+
+<!-- ══ LOG BOTTOM SHEET ═════════════════════════════════════════ -->
+<div class="log-sheet-backdrop" id="logBackdrop" onclick="toggleLog()"></div>
+
+<div class="log-sheet" id="logSheet">
+  <div class="log-sheet-handle"></div>
+  <div class="log-sheet-header">
+    <div class="log-sheet-title">LOG SYSTÈME</div>
+    <button class="btn-log-close" onclick="toggleLog()">✕</button>
+  </div>
+  <div class="log-box" id="logBox"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script src="scanner.js"></script>
+<script src="engine.js"></script>
+<script src="ui.js"></script>
+<script src="sniper.js"></script>
+<script src="backtest2.js"></script>
+<script src="charts.js"></script>
+
+<script>
+/* ══ INDEX HELPERS ══════════════════════════════════════════════ */
+
+// Backtest Phase 2
+function showBT2Panel() {
+  ['tableWrap','sniper-panel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById('bt2-panel').style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-bt2').classList.add('active');
+}
+
+function bt2Run() {
+  const pair = document.getElementById('bt2-pair').value.trim();
+  if (!pair) return;
+  Backtest2.run(pair);
+}
+
+// Depuis une card Phase 1 → pré-remplit le BT2 et bascule
+function sendToBT2(pair) {
+  showBT2Panel();
+  document.getElementById('bt2-pair').value = pair.replace('-USD','');
+  document.getElementById('bt2-status').textContent = `Paire ${pair} chargée — appuyez sur ANALYSER`;
+}
+
+// Sniper panel
+function showSniperPanel() {
+  document.getElementById('tableWrap').style.display   = 'none';
+  document.getElementById('sniper-panel').style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-live').classList.add('active');
+}
+
+function hideSniperPanel() {
+  document.getElementById('sniper-panel').style.display = 'none';
+  document.getElementById('tableWrap').style.display    = 'block';
+}
+
+function sniperAdd() {
+  const input = document.getElementById('sniper-input');
+  const val   = input.value.trim();
+  if (!val) return;
+  Sniper.addPair(val);
+  input.value = '';
+  updateSniperCount();
+}
+
+function sniperToggle() {
+  if (Sniper.isRunning) Sniper.stop();
+  else Sniper.start();
+}
+
+function sniperToggleVoice() {
+  Sniper.voiceEnabled = !Sniper.voiceEnabled;
+  const btn = document.getElementById('sniper-voice-btn');
+  btn.textContent = Sniper.voiceEnabled ? '🔊' : '🔇';
+  btn.classList.toggle('active', Sniper.voiceEnabled);
+  // Test vocal au premier allumage
+  if (Sniper.voiceEnabled) Sniper.speak('Alertes vocales activées.');
+}
+
+function toggleSnpCfg() {
+  const panel = document.getElementById('snp-cfg-panel');
+  const btn   = document.getElementById('btn-snp-cfg');
+  if (!panel) return;
+  panel.classList.toggle('open');
+  btn.classList.toggle('active', panel.classList.contains('open'));
+}
+
+function updateSniperCount() {
+  const el = document.getElementById('sniper-count');
+  if (el) el.textContent = `${Sniper.pairs.length} / ${Sniper.MAX_PAIRS} paires`;
+}
+
+// Bouton ➕ sur les cards Phase 1 → envoie vers Sniper
+function sendToSniper(pair) {
+  showSniperPanel();
+  Sniper.addPair(pair);
+  updateSniperCount();
+  UI.addLog(`${pair} envoyée en Phase 2 LIVE`, 'ok');
+}
+
+// Config panel
+function toggleConfig() {
+  const panel = document.getElementById('cfgPanel');
+  const btn   = document.getElementById('cfgToggle');
+  const arrow = document.getElementById('cfgArrow');
+  const open  = panel.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+// Log bottom sheet
+let logOpen = false;
+function toggleLog() {
+  logOpen = !logOpen;
+  document.getElementById('logSheet').classList.toggle('open', logOpen);
+  document.getElementById('logBackdrop').classList.toggle('open', logOpen);
+  // Scroll log to bottom when opening
+  if (logOpen) {
+    const box = document.getElementById('logBox');
+    setTimeout(() => box.scrollTop = box.scrollHeight, 50);
+  }
+}
+
+// BTC strip
+function updateBTCBadge(ctx) {
+  const el = document.getElementById('stripBTC');
+  if (!ctx) { el.textContent = '—'; el.style.color = 'var(--dim)'; return; }
+  el.textContent = ctx.bullish ? `▲ ${(ctx.price/1000).toFixed(1)}k` : `▼ ${(ctx.price/1000).toFixed(1)}k`;
+  el.style.color = ctx.bullish ? 'var(--green)' : 'var(--red)';
+}
+
+// Progress
+function updateProgress(done, total) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressWrap').classList.toggle('visible', total > 0);
+}
+
+// Stats strip
+function updateStats(results) {
+  document.getElementById('statScanned').textContent  = results._scanned ?? '—';
+  document.getElementById('statSignals').textContent  = results.length;
+  document.getElementById('statSprings').textContent  = results.filter(r => r.isSpring).length;
+  document.getElementById('statSniper').textContent   = results.filter(r => r.sniperScore >= 3).length;
+}
+
+// Scan button
+function setScanState(scanning) {
+  const btn  = document.getElementById('btnScan');
+  const icon = document.getElementById('btnScanIcon');
+  const txt  = document.getElementById('btnScanText');
+  btn.disabled = scanning;
+  btn.classList.toggle('scanning', scanning);
+  icon.textContent = scanning ? '⏳' : '▶';
+  txt.textContent  = scanning ? 'SCANNING...' : 'RE-SCANNER';
+}
+
+// Count badge
+function updateCountBadge(n) {
+  const el = document.getElementById('countBadge');
+  el.textContent = `${n} résultat${n > 1 ? 's' : ''}`;
+  el.classList.toggle('has-results', n > 0);
+}
+
+// Log error/warn notification dot
+function setLogNotif(type) {
+  const btn = document.getElementById('btnLogToggle');
+  if (type === 'err')  { btn.classList.add('has-err');  document.getElementById('logNotif').style.display = 'block'; }
+  if (type === 'warn') { btn.classList.add('has-warn'); }
+}
+
+/* ── Theme toggle ────────────────────────────────────────── */
+/* ── Theme toggle ────────────────────────────────────────────────────────────── */
+// système : @media (prefers-color-scheme) gère le défaut sans JS
+// manuel  : .light-mode / .dark-mode sur <html> surchargent le système
+// stockage: 'light' | 'dark' | null (= suivre le système)
+
+function _isSystemLight() {
+    return window.matchMedia('(prefers-color-scheme: light)').matches;
+}
+
+function _syncThemeBtn(isLight) {
+    const btn  = document.getElementById('btnTheme');
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (btn)  btn.textContent = isLight ? '☀️' : '🌙';
+    if (meta) meta.setAttribute('content', isLight ? '#f0f3f8' : '#020810');
+}
+
+function toggleTheme() {
+    const html    = document.documentElement;
+    const wasLight = html.classList.contains('light-mode') ||
+                    (!html.classList.contains('dark-mode') && _isSystemLight());
+    // Bascule vers l'opposite
+    html.classList.remove('light-mode', 'dark-mode');
+    if (wasLight) {
+        html.classList.add('dark-mode');
+        localStorage.setItem('sp_theme', 'dark');
+    } else {
+        html.classList.add('light-mode');
+        localStorage.setItem('sp_theme', 'light');
+    }
+    _syncThemeBtn(!wasLight);
+}
+
+// applyTheme : appliqué une seule fois au chargement
+// Si localStorage correspond déjà au système → rien à faire (CSS a tout géré)
+function applyTheme() {
+    const saved    = localStorage.getItem('sp_theme');
+    const sysLight = _isSystemLight();
+    const html     = document.documentElement;
+    if (saved === 'light' && !sysLight) {
+        // Manuel clair sur système sombre → ajoute .light-mode
+        html.classList.add('light-mode');
+    } else if (saved === 'dark' && sysLight) {
+        // Manuel sombre sur système clair → ajoute .dark-mode
+        html.classList.add('dark-mode');
+    }
+    // saved === null ou saved === système → @media CSS suffit, rien à faire
+    const isLight = html.classList.contains('light-mode') ||
+                   (!html.classList.contains('dark-mode') && sysLight);
+    _syncThemeBtn(isLight);
+}
+
+</script>
+</body>
+</html>
